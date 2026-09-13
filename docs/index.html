@@ -7,7 +7,11 @@
     <style>
       /* A plain, single-file setup page. It is the URL the Figma listing points at,
          so it has to be readable in a browser by someone who has never seen the
-         repo — no build step, no JS, no CDN. */
+         repo — no build step, no JS, no CDN.
+
+         One page, not two: this file is also docs/setup.html's content. Keeping a
+         second copy in step by hand is how documentation rots, so setup.html is a
+         redirect to here instead. */
       :root {
         --ink: #1e1e1e;
         --ink-2: #5c5c5c;
@@ -67,7 +71,6 @@
         border-radius: 0 6px 6px 0;
       }
       .note.ok { border-left-color: var(--ok); background: #f2fbf6; }
-      .note.warn { border-left-color: var(--warn); background: #fff8ee; }
       .lead { font-size: 19px; }
       footer {
         margin-top: 56px;
@@ -85,34 +88,51 @@
       <p class="sub">Setup and usage — the page the Figma Community listing points at.</p>
 
       <p class="lead">
-        This plugin connects the Figma file you are in to a small program running on
-        <strong>your own computer</strong>, so that program can read and edit the file for you.
+        This plugin gives a program on <strong>your own computer</strong> read and write access to the
+        Figma file you have open. It does nothing by itself: it waits for that program to ask for
+        something, then acts on the real layer tree.
       </p>
 
       <div class="note">
-        <strong>The plugin is only half the system.</strong> It needs a local bridge program to talk
-        to. Without it the plugin shows an explicit offline message and changes nothing — it will
-        never fail silently. Set up the bridge first, then run the plugin.
+        <strong>The plugin is half of a pair.</strong> It needs a local app to talk to. Without one it
+        shows an explicit offline message and changes nothing — it never fails silently. Set up the
+        local app first, then run the plugin.
       </div>
 
-      <h2>1. Install the bridge</h2>
+      <h2>1. What it is good for</h2>
 
-      <p>You need <strong>Node.js 22 or newer</strong> (<a href="https://nodejs.org/">nodejs.org</a>) and
-      <strong>pnpm</strong>. Then, in a terminal:</p>
+      <ul>
+        <li>Bulk edits that are tedious by hand: unify spacing, rename layers, re-parent a subtree.</li>
+        <li>
+          Checking a file the way a linter would: read the layer tree as data, and find things that are
+          invisible on screen — such as hard-coded colours where a variable already holds the same
+          value.
+        </li>
+        <li>Driving the canvas from a script, a CI job, or an agent you configured yourself.</li>
+      </ul>
+
+      <h2>2. Install the local app</h2>
+
+      <p>
+        You need <strong>Node.js 22 or newer</strong> (<a href="https://nodejs.org/">nodejs.org</a>) and
+        <strong>pnpm</strong>. Then, in a terminal:
+      </p>
 
       <pre><code>git clone https://github.com/izt-pixel/dsh-figma.git
 cd dsh-figma
 pnpm install
 pnpm build</code></pre>
 
-      <p>Start the bridge in the foreground:</p>
+      <p>Start it in the foreground:</p>
 
       <pre><code>pnpm serve:standalone</code></pre>
 
-      <p>Leave that terminal open. It serves the local endpoint the plugin polls:
-      <code>http://localhost:8790</code>.</p>
+      <p>
+        Leave that terminal open. It serves the local endpoint the plugin talks to:
+        <code>http://localhost:8790</code>.
+      </p>
 
-      <h2>2. Install the plugin in Figma</h2>
+      <h2>3. Install the plugin in Figma</h2>
 
       <ol>
         <li>Open any file in the Figma <strong>desktop app</strong>.</li>
@@ -127,15 +147,17 @@ pnpm build</code></pre>
         version Figma is running matches the one you built.
       </p>
 
-      <h2>3. Use it</h2>
+      <h2>4. What the local app can ask for</h2>
 
       <p>
-        The bridge speaks MCP (Model Context Protocol), so anything that can act as an MCP client can
-        drive it — an editor, a script, or an agent you configured yourself. Six tools are exposed:
+        Six capabilities, each a single request and response. The local app exposes them over MCP
+        (Model Context Protocol) on stdio, which is convenient for editor integrations — but the
+        protocol is not the point: anything that can talk to <code>http://localhost:8790</code>
+        directly can drive the canvas the same way.
       </p>
 
       <table>
-        <tr><th>Tool</th><th>What it does</th><th>Writes?</th></tr>
+        <tr><th>Capability</th><th>What it does</th><th>Changes the file?</th></tr>
         <tr><td><code>status</code></td><td>Link state, file, page, current selection</td><td>no</td></tr>
         <tr><td><code>ping</code></td><td>Round-trip latency</td><td>no</td></tr>
         <tr><td><code>describe</code></td><td>Read the canvas as structured JSON, including auto-layout and variable bindings</td><td>no</td></tr>
@@ -144,7 +166,7 @@ pnpm build</code></pre>
         <tr><td><code>tokens</code></td><td>List, audit, bind, create and delete design variables</td><td>yes</td></tr>
       </table>
 
-      <h3>Two things worth knowing</h3>
+      <h3>Three things worth knowing</h3>
       <ul>
         <li>
           <strong>One <code>apply</code> call is one undo step.</strong> A whole screen built in a
@@ -154,6 +176,10 @@ pnpm build</code></pre>
           <strong>Unknown property names are rejected, not ignored.</strong> A typo fails loudly
           instead of leaving you believing you set something you did not set.
         </li>
+        <li>
+          <strong>Reads and writes share one vocabulary.</strong> <code>describe</code> reports
+          auto-layout in Figma's own terms, so what a caller reads is what it can write back.
+        </li>
       </ul>
 
       <h2>Check the link without Figma</h2>
@@ -162,8 +188,8 @@ pnpm build</code></pre>
 
       <p>
         It prints the plugin instances currently connected and the file each one is attached to. When
-        nothing is connected the bridge still answers, which is how you tell "bridge down" apart from
-        "bridge up, plugin not running".
+        nothing is connected the local app still answers, which is how you tell "app not running"
+        apart from "app running, plugin not running".
       </p>
 
       <h2>Troubleshooting</h2>
@@ -172,7 +198,7 @@ pnpm build</code></pre>
         <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
         <tr>
           <td>Panel says <code>offline</code>, <code>health</code> unreachable</td>
-          <td>The bridge is not running</td>
+          <td>The local app is not running</td>
           <td>Start it: <code>pnpm serve:standalone</code></td>
         </tr>
         <tr>
@@ -189,9 +215,9 @@ pnpm build</code></pre>
           <td>Close it everywhere except the file you are working in</td>
         </tr>
         <tr>
-          <td>Nothing happens when the agent acts</td>
-          <td>The bridge is attached to a different file or page</td>
-          <td>Run <code>status</code> and check the file and page it names</td>
+          <td>A request seems to do nothing</td>
+          <td>The app is attached to a different file or page</td>
+          <td>Ask for <code>status</code> and check the file and page it names</td>
         </tr>
       </table>
 
@@ -200,19 +226,19 @@ pnpm build</code></pre>
       <div class="note ok">
         The plugin's only network access is <code>http://localhost:8790</code> — a program on your own
         machine. There is no server operated by the plugin's author, no analytics, and no telemetry.
-        Your file's contents go to the bridge you run, and from there only to whatever client you
+        Your file's contents go to the local app you run, and from there only to whatever client you
         chose to connect. Full text: <a href="./PRIVACY.html">privacy policy</a>.
       </div>
 
       <h2>Security notes</h2>
       <ul>
         <li>
-          The bridge binds <strong>loopback addresses only</strong> (<code>127.0.0.1</code> and
+          The local app binds <strong>loopback addresses only</strong> (<code>127.0.0.1</code> and
           <code>::1</code>), so it is not reachable from your local network or the internet.
         </li>
         <li>
-          Any process on your own machine can reach that port. Treat the bridge as you would any
-          local developer server, and do not leave it running with an untrusted client attached.
+          Any process on your own machine can reach that port. Treat it as you would any local
+          developer server, and do not leave it running with an untrusted client attached.
         </li>
       </ul>
 

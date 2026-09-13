@@ -31,10 +31,10 @@ The bridge is a program you run yourself, on your own machine. It:
 - makes **no outbound network requests of its own**;
 - writes logs to its own standard error output, which stays on your machine.
 
-Whatever reads from the bridge (for example an AI agent you configured) is under your control and
-covered by that tool's own privacy policy — not this one. If you point such a tool at a hosted
-model provider, your file's contents are sent to that provider **by that tool**, and you should
-read its terms before doing so.
+Whatever reads from the bridge — a script, an editor, or a service you configured — is under your
+control and covered by that tool's own privacy policy, not this one. If you point such a tool at a
+hosted provider, your file's contents are sent to that provider **by that tool**, and you should read
+its terms before doing so.
 
 ## Data the author receives
 

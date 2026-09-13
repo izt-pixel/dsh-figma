@@ -1,16 +1,20 @@
 # DSH Figma Bridge
 
-让 **DeepSeek Harness（DSH）** 直接读写 Figma 画布：在 DSH 里说"帮我把这个页面的间距统一成 8pt 栅格"，
-模型真的去改图层，而不是吐一段代码让你手动拼。
+把 Figma 画布的读写能力开放给**你自己电脑上的程序**：不再靠截图和手工操作，而是让程序直接读图层树、
+写真实属性。批量改间距、重命名图层、像 linter 一样审查硬编码色值——写一次循环，剩下的交给它。
+
+驱动它的程序由你决定：一个脚本、一次 CI 任务，或你自己配置的 agent（本项目的参考实现是
+**DeepSeek Harness（DSH）**，仓库里的 `packages/bridge` 既是通用本地服务，也是它的 MCP server）。
 
 分两块：
 
 - **`packages/plugin`** —— 装进 Figma 的插件，跑在插件 main 沙箱里，有完整的 `figma` API。
-- **`packages/bridge`** —— 本地 Node 进程。对外是 DSH 的一个 MCP server，对内是插件长轮询的 HTTP 端点。
+- **`packages/bridge`** —— 本地 Node 进程。对内是插件长轮询的 HTTP 端点，对外提供
+  MCP（stdio）接口，也可以脱离 MCP 单独以 HTTP 模式运行。
 
 ```
-DSH agent ──MCP/stdio──> bridge ──HTTP 长轮询──> Figma 插件 ──figma API──> 画布
-                      127.0.0.1:8790
+你的程序 ──MCP/stdio 或直接 HTTP──> bridge ──HTTP 长轮询──> Figma 插件 ──figma API──> 画布
+                                  127.0.0.1:8790
 ```
 
 为什么是长轮询而不是 WebSocket：Figma 插件沙箱的全局对象里**只有** `figma`、`fetch`、`console`、
@@ -85,11 +89,11 @@ Get-Process node | Stop-Process -Force    # DSH 会在退避内重新拉起新�
 **怎么确认 Figma 里跑的确实是你刚构建的那份？** 看面板右上角的 **build id**：
 
 ```
-v0.1.0 · p1 · 2cf7f0d2
+v0.1.0 · p1 · 49408afc
                   ^^^^^^^^ 每次构建都会变（源码的哈希）
 ```
 
-（上面这个 `2cf7f0d2` 是当前 `dist/code.js` 里真实的 id，不要把它当固定值读——
+（上面这个 `49408afc` 是当前 `dist/code.js` 里真实的 id，不要把它当固定值读——
 它跟着源码走。哪天它和面板显示的不一致，就说明两边不是同一份产物。）
 
 之前只有版本号和命令列表可看，而这两者在"只改内部逻辑、不加工具"的构建之间**完全一样**——

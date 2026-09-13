@@ -2705,6 +2705,16 @@ function endpoint(): string {
 }
 
 /**
+ * How the plugin talks about the bridge in the panel.
+ *
+ * "Bridge" is this codebase's internal name for the process; a plugin user has
+ * never heard it, and a panel that says "bridge" does not explain what to start or
+ * where. So everything a non-developer can see calls it "the local app" and says
+ * what to do about it. Errors only a developer can act on — the log, the protocol
+ * version mismatch — keep their facts instead, because there the facts ARE the fix.
+ */
+const LOCAL_APP = 'the local app';
+/**
  * Render an unknown throwable as something a human can act on.
  *
  * Figma's sandbox `fetch` does not reject with an `Error` — it rejects with a
@@ -2790,32 +2800,35 @@ async function iterate(): Promise<void> {
     });
 
     if (!http.ok) {
-        const detail = await readErrorBody(http);
-        throw new Error(`bridge answered HTTP ${http.status}: ${detail}`);
-      }
-
-      response = (await http.json()) as PollResponse;
-      // The bridge has the results now; anything still buffered was not sent.
-      outgoingResults = [];
-    } catch (error) {
-      failures += 1;
-      setLink('offline', `Cannot reach ${endpoint()} — ${message(error)}`);
-      if (failures === 1 || failures % 10 === 0) {
-        note(`offline (attempt ${failures}): ${message(error)}`);
-      }
-      await sleep(backoffMs(failures));
-      return;
+      const detail = await readErrorBody(http);
+      throw new Error(`${LOCAL_APP} answered HTTP ${http.status}: ${detail}`);
     }
 
-    if (response.v !== PROTOCOL_VERSION) {
-      setLink(
-        'error',
-        `Protocol mismatch: the bridge speaks v${String(response.v)}, this plugin speaks v${PROTOCOL_VERSION}. Rebuild both from the same revision.`,
-      );
-      note('stopped: protocol mismatch');
-      running = false;
-      return;
+    response = (await http.json()) as PollResponse;
+    // The bridge has the results now; anything still buffered was not sent.
+    outgoingResults = [];
+  } catch (error) {
+    failures += 1;
+    // The address and the OS-level reason both stay: the first is what the user
+    // has to check, the second ("connection refused" vs "blocked") is what tells
+    // them whether to start something or to fix a port.
+    setLink('offline', `No app found at ${endpoint()} — ${message(error)}`);
+    if (failures === 1 || failures % 10 === 0) {
+      note(`offline (attempt ${failures}): ${message(error)}`);
     }
+    await sleep(backoffMs(failures));
+    return;
+  }
+
+  if (response.v !== PROTOCOL_VERSION) {
+    setLink(
+      'error',
+      `Version mismatch: ${LOCAL_APP} speaks v${String(response.v)}, this plugin speaks v${PROTOCOL_VERSION}. Update both to the same release.`,
+    );
+    note('stopped: protocol mismatch');
+    running = false;
+    return;
+  }
 
     if (failures > 0 || linkState !== 'connected') {
       failures = 0;
@@ -2910,7 +2923,7 @@ figma.ui.onmessage = async (raw: unknown): Promise<void> => {
     note(`switched to port ${port}`);
     setLink(
       'connecting',
-      `Switching to port ${port}. If a poll is in flight this takes effect within ~25 s.`,
+      `Switching to port ${port}. If a request is in flight this takes effect within ~25 s.`,
     );
   }
 };
@@ -2933,8 +2946,11 @@ async function main(): Promise<void> {
     // A fresh install simply runs with defaults.
   }
 
-  note(`plugin v${PLUGIN_VERSION} started, target port ${port}`);
-  setLink('connecting', `Connecting to ${endpoint()}…`);
+  note(`plugin v${PLUGIN_VERSION} started, looking on port ${port}`);
+  setLink(
+    'connecting',
+    `Looking for ${LOCAL_APP} on ${endpoint()}. If nothing connects, start it with "pnpm serve:standalone".`,
+  );
   await loop();
 }
 

@@ -104,7 +104,7 @@
       <span class="muted" id="version"></span>
     </div>
 
-    <div class="detail" id="detail">Waiting for the first poll…</div>
+    <div class="detail" id="detail">Looking for a local app to drive this plugin…</div>
 
     <dl class="facts">
       <dt>File</dt><dd id="file">—</dd>
@@ -122,6 +122,11 @@
     <div class="hint">
       Changing the port also needs a matching entry in manifest.json →
       networkAccess.allowedDomains, or Figma blocks the request.
+    </div>
+
+    <div class="hint" id="commands-hint">
+      Commands: what the local app may ask this plugin to do. Nothing runs until it asks.
+      If the panel says offline, start the local app and press Refresh.
     </div>
 
     <div id="log"></div>
