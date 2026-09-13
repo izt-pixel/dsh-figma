@@ -1,0 +1,37 @@
+{
+  "name": "dsh-figma",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Let DeepSeek Harness drive Figma directly: an MCP bridge plus a Figma plugin.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.8.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/izt-pixel/dsh-figma.git"
+  },
+  "homepage": "https://github.com/izt-pixel/dsh-figma#readme",
+  "bugs": {
+    "url": "https://github.com/izt-pixel/dsh-figma/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm run build:protocol && pnpm run build:bridge && pnpm run build:plugin",
+    "build:protocol": "pnpm --filter @dsh-figma/protocol run build",
+    "build:bridge": "pnpm --filter @dsh-figma/bridge run build",
+    "build:plugin": "pnpm --filter @dsh-figma/plugin run build",
+    "typecheck": "pnpm -r run typecheck",
+    "smoke": "node ./packages/bridge/scripts/smoke.mjs",
+    "verify:plugin": "node ./packages/plugin/scripts/verify-bundle.mjs",
+    "test:serializer": "node ./packages/plugin/scripts/test-serializer.mjs",
+    "test:apply": "node ./packages/plugin/scripts/test-apply.mjs",
+    "test": "pnpm run smoke && pnpm run test:serializer && pnpm run test:apply",
+    "serve": "node ./packages/bridge/dist/mcp.js",
+    "serve:standalone": "node ./packages/bridge/dist/mcp.js --standalone"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

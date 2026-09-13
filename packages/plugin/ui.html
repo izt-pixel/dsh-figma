@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /*
+       * `themeColors: true` on showUI injects Figma's --figma-color-* custom
+       * properties, so the panel follows the user's light/dark theme. The
+       * fallbacks keep it legible if that ever stops being true.
+       */
+      :root {
+        --bg: var(--figma-color-bg, #2c2c2c);
+        --bg-secondary: var(--figma-color-bg-secondary, #383838);
+        --text: var(--figma-color-text, #ffffff);
+        --text-secondary: var(--figma-color-text-secondary, #b3b3b3);
+        --border: var(--figma-color-border, #444444);
+        --accent: var(--figma-color-text-brand, #0d99ff);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 10px;
+        font: 11px/1.5 ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .row { display: flex; align-items: center; gap: 6px; }
+      .header { margin-bottom: 8px; }
+      .dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--text-secondary); flex: 0 0 auto;
+      }
+      .dot.connected { background: #14ae5c; }
+      .dot.offline { background: #f24822; }
+      .dot.error { background: #ffcd29; }
+      .dot.connecting { background: var(--accent); }
+      .state { font-weight: 600; text-transform: capitalize; }
+      .spacer { flex: 1 1 auto; }
+      .muted { color: var(--text-secondary); }
+      .detail {
+        margin: 4px 0 8px;
+        color: var(--text-secondary);
+        word-break: break-word;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 2px 8px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+      }
+      .facts dt { color: var(--text-secondary); }
+      .facts dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .port { margin: 8px 0 2px; }
+      .hint {
+        margin-bottom: 8px;
+        color: var(--text-secondary);
+        font-size: 10px;
+        line-height: 1.4;
+      }
+      input[type="number"] {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 4px 6px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        color: var(--text);
+        font: inherit;
+      }
+      button {
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg-secondary);
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      #log {
+        height: 108px;
+        overflow-y: auto;
+        margin: 8px 0;
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        font: 10px/1.45 ui-monospace, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .footer { display: flex; gap: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="row header">
+      <span class="dot" id="dot"></span>
+      <span class="state" id="state">connecting</span>
+      <span class="spacer"></span>
+      <span class="muted" id="version"></span>
+    </div>
+
+    <div class="detail" id="detail">Waiting for the first poll…</div>
+
+    <dl class="facts">
+      <dt>File</dt><dd id="file">—</dd>
+      <dt>Page</dt><dd id="page">—</dd>
+      <dt>Selected</dt><dd id="selection">—</dd>
+      <dt>Commands</dt><dd id="commands">—</dd>
+      <dt>Served</dt><dd id="served">0</dd>
+    </dl>
+
+    <div class="row port">
+      <span class="muted">Port</span>
+      <input type="number" id="port" min="1" max="65535" />
+      <button id="apply">Apply</button>
+    </div>
+    <div class="hint">
+      Changing the port also needs a matching entry in manifest.json →
+      networkAccess.allowedDomains, or Figma blocks the request.
+    </div>
+
+    <div id="log"></div>
+
+    <div class="footer">
+      <button id="refresh">Refresh</button>
+      <span class="spacer"></span>
+      <button id="stop" class="primary">Stop plugin</button>
+    </div>
+
+    <script>
+      const el = (id) => document.getElementById(id);
+      let lastPort = null;
+
+      function send(pluginMessage) {
+        parent.postMessage({ pluginMessage }, '*');
+      }
+
+      function render(state) {
+        el('dot').className = 'dot ' + state.state;
+        el('state').textContent = state.state;
+        el('detail').textContent = state.detail;
+        // The build id is the only field that changes on every rebuild, so it is
+        // what tells you whether Figma is running the bundle you just wrote.
+        el('version').textContent =
+          'v' + state.pluginVersion + ' · p' + state.protocolVersion + ' · ' + (state.buildId || 'unstamped');
+
+        const identity = state.identity || {};
+        el('file').textContent = identity.fileName || '(unsaved file)';
+        el('page').textContent = identity.pageName || '—';
+        el('selection').textContent =
+          identity.selectionCount === 0
+            ? 'nothing'
+            : identity.selectionCount + ' node' + (identity.selectionCount === 1 ? '' : 's');
+        el('commands').textContent = (identity.commands || []).join(', ') || '—';
+        el('served').textContent = String(state.commandCount);
+
+        el('log').textContent = (state.log || []).join('\n');
+
+        // Only overwrite the input when the plugin's port actually changed, so
+        // typing is never interrupted by a background state push.
+        if (state.port !== lastPort) {
+          el('port').value = String(state.port);
+          lastPort = state.port;
+        }
+      }
+
+      window.onmessage = (event) => {
+        const message = event.data && event.data.pluginMessage;
+        if (message && message.type === 'state') render(message);
+      };
+
+      el('apply').onclick = () => send({ type: 'reconfigure', port: el('port').value });
+      el('refresh').onclick = () => send({ type: 'refresh' });
+      el('stop').onclick = () => send({ type: 'stop' });
+    </script>
+  </body>
+</html>

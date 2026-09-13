@@ -1,0 +1,18 @@
+{
+  "name": "@dsh-figma/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Figma plugin: a canvas layer on the figma API plus a long-polling network layer, emitted as one dependency-free script.",
+  "scripts": {
+    "build": "tsc -p . && node ./scripts/stamp-build.mjs && node ./scripts/verify-bundle.mjs && node ./scripts/test-serializer.mjs && node ./scripts/test-apply.mjs",
+    "typecheck": "tsc -p . --noEmit",
+    "verify": "node ./scripts/verify-bundle.mjs",
+    "stamp": "node ./scripts/stamp-build.mjs",
+    "test": "node ./scripts/test-serializer.mjs && node ./scripts/test-apply.mjs"
+  },
+  "devDependencies": {
+    "@dsh-figma/protocol": "workspace:*",
+    "@figma/plugin-typings": "^1.138.0"
+  }
+}

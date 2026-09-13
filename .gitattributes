@@ -1,0 +1,18 @@
+# Line endings are pinned to LF for source, because the plugin's build id is a
+# hash of the compiled bundle: if git hands a Windows contributor CRLF sources,
+# tsc emits different bytes and the same revision produces a different build id
+# on their machine than on CI. The id is what the README tells people to compare
+# against, so it has to be a property of the revision, not of the checkout.
+* text=auto eol=lf
+
+# Windows-only helper scripts, which are happier with CRLF.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Binary assets: never touch these.
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

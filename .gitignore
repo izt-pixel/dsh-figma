@@ -1,0 +1,21 @@
+# Dependencies are installed from a workspace-local pnpm store.
+node_modules/
+.pnpm-store/
+
+# Build output. `dist/code.js` is what the Figma manifest points at, so it is
+# produced by `pnpm build` rather than committed.
+packages/*/dist/
+
+# Scratch space for local experiments and captured command output.
+.scratch/
+
+# Working material for the Community listing submission: marketplace copy,
+# reviewer notes, generated marketing images. Process, not product.
+_上架内部/
+
+# Editors and OS noise.
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.log

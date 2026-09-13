@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "rootDir": "src",
+    "outDir": "dist",
+    // The sandbox globals (figma, fetch, setTimeout, console, __html__) come
+    // from this package's index.d.ts. Resolving it through typeRoots is
+    // Figma's documented setup.
+    "typeRoots": ["./node_modules/@figma"],
+    "types": ["plugin-typings"],
+    // Figma loads `main` as one classic script: emit a single flat file with no
+    // imports, no exports, and no source map sidecars.
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmitOnError": true
+  },
+  "include": ["src/**/*.ts"]
+}

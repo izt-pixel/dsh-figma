@@ -1,0 +1,14 @@
+{
+  "id": "1680977634792093219",
+  "name": "DSH Figma Bridge",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "dist/code.js",
+  "ui": "ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:8790"],
+    "reasoning": "Connects to a bridge process running on this computer so that the user's own AI agent (DeepSeek Harness) can read and edit the current file. All traffic stays on the local machine; nothing is sent to a remote server.",
+    "devAllowedDomains": ["http://localhost:8790"]
+  }
+}

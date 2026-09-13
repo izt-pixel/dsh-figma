@@ -1,0 +1,26 @@
+{
+  "name": "@dsh-figma/bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local bridge: an MCP server (stdio) for DeepSeek Harness on one side, a loopback HTTP endpoint the Figma plugin long-polls on the other.",
+  "main": "./dist/mcp.js",
+  "bin": {
+    "dsh-figma-bridge": "./dist/mcp.js"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node ./dist/mcp.js",
+    "standalone": "node ./dist/mcp.js --standalone",
+    "smoke": "node ./scripts/smoke.mjs",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "@dsh-figma/protocol": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3"
+  }
+}
