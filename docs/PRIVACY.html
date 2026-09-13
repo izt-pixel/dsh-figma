@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DSH Figma Bridge — privacy policy</title>
+    <style>
+      :root { --ink: #1e1e1e; --ink-2: #5c5c5c; --line: #e6e6e6; --bg-2: #f7f7f7; --brand: #722ed2; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 56px 24px 96px;
+        background: #fff;
+        color: var(--ink);
+        font: 17px/1.65 "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+        text-wrap: pretty;
+      }
+      main { max-width: 760px; margin: 0 auto; }
+      h1 { font-size: 36px; line-height: 1.16; margin: 0 0 6px; letter-spacing: -0.02em; }
+      .sub { margin: 0 0 40px; color: var(--ink-2); }
+      h2 { font-size: 22px; margin: 44px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); }
+      p { margin: 0 0 14px; }
+      ul { margin: 0 0 16px; padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      code {
+        font: 15px/1.5 "Cascadia Mono", Consolas, monospace;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      table { width: 100%; border-collapse: collapse; margin: 0 0 18px; font-size: 16px; }
+      th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-weight: 600; background: var(--bg-2); }
+      .lead { font-size: 19px; }
+      a { color: var(--brand); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy policy</h1>
+      <p class="sub">DSH Figma Bridge plugin for Figma, and the local bridge program it connects to.</p>
+
+      <p class="lead">
+        The plugin sends design data to exactly one place: a program running on your own computer
+        (<code>http://localhost:8790</code>). It does not contact any server operated by the plugin's
+        author. There is no analytics, no telemetry, no crash reporting, and no account system.
+      </p>
+
+      <h2>What the plugin sends, and where</h2>
+
+      <table>
+        <tr><th>Destination</th><th>What goes there</th><th>When</th></tr>
+        <tr>
+          <td><code>http://localhost:8790</code><br />(a bridge process on your machine)</td>
+          <td>The plugin's own status: file name, page name, the <em>count</em> of selected nodes, and the commands it supports</td>
+          <td>Continuously while the plugin is open</td>
+        </tr>
+        <tr>
+          <td><code>http://localhost:8790</code></td>
+          <td>Results of the commands that program requests: node properties, layer structure, exported images of nodes you selected or named</td>
+          <td>Only when that program asks</td>
+        </tr>
+      </table>
+
+      <p>
+        That address is the plugin's <strong>only</strong> network access. It is declared in the plugin
+        manifest as <code>networkAccess.allowedDomains</code>, and Figma enforces it.
+      </p>
+
+      <p>
+        The plugin does not send your file anywhere else, does not read files other than the one it is
+        running in, and transmits nothing at all while the bridge is not running.
+      </p>
+
+      <h2>What the bridge program does</h2>
+
+      <p>The bridge is a program you run yourself, on your own machine. It:</p>
+      <ul>
+        <li>
+          accepts local connections only — it binds loopback addresses (<code>127.0.0.1</code> and
+          <code>::1</code>) and is not reachable from your local network or the internet;
+        </li>
+        <li>makes <strong>no outbound network requests of its own</strong>;</li>
+        <li>writes logs to its own standard error output, which stays on your machine.</li>
+      </ul>
+
+      <p>
+        Whatever reads from the bridge — for example an agent you configured — is under your control
+        and covered by that tool's own privacy policy, not this one. If you point such a tool at a
+        hosted model provider, your file's contents are sent to that provider <em>by that tool</em>.
+        Read its terms before doing so.
+      </p>
+
+      <h2>Data the author receives</h2>
+      <p>
+        None. The author has no server, receives no copy of your designs, and cannot see your usage.
+      </p>
+
+      <h2>Data retention</h2>
+      <p>
+        The plugin and bridge keep nothing beyond the current session, except two values the plugin
+        stores in Figma's own <code>clientStorage</code>: the bridge port and a pairing token. Both
+        live in your Figma client and are cleared by removing and reinstalling the plugin.
+      </p>
+
+      <h2>Contact</h2>
+      <p>Questions about this policy: <a href="mailto:silentzyh@163.com">silentzyh@163.com</a></p>
+    </main>
+  </body>
+</html>

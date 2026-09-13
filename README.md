@@ -17,6 +17,10 @@ DSH agent ──MCP/stdio──> bridge ──HTTP 长轮询──> Figma 插件
 `setTimeout` 系列、`__html__`、`__uiFiles__` —— **没有 `WebSocket`**，插件也不能监听端口。
 细节和取证见 [`docs/plan.md`](docs/plan.md)。
 
+**公开文档（给用户和 Figma 评审看的那个网址）**：
+<https://izt-pixel.github.io/dsh-figma/> —— 讲怎么装、怎么用、坏了怎么查；
+隐私政策在 <https://izt-pixel.github.io/dsh-figma/PRIVACY.html>。
+
 ---
 
 ## 快速开始
